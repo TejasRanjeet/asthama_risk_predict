@@ -1,7 +1,8 @@
 import pandas as pd
+import joblib
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-def preprocess_data(df, train=False, encoder=None, scaler=None):
+def preprocess_data(df, train=False, encoder_path="encoder.pkl", scaler_path="scaler.pkl"):
     categorical_cols = ["Asthma Symptoms Frequency", "Triggers", "Weather Sensitivity", 
                         "Poor Air Quality Exposure", "Night Breathing Difficulty"]
     numerical_cols = ["AQI", "PM2.5", "SO2 level", "NO2 level", "CO2 level", "Humidity", "Temperature"]
@@ -19,7 +20,15 @@ def preprocess_data(df, train=False, encoder=None, scaler=None):
         scaler = StandardScaler()
         encoded_cats = encoder.fit_transform(X[categorical_cols])
         scaled_nums = scaler.fit_transform(X[numerical_cols])
+
+        # Save encoder and scaler for later use
+        joblib.dump(encoder, encoder_path)
+        joblib.dump(scaler, scaler_path)
     else:
+        # Load pre-trained encoder and scaler
+        encoder = joblib.load(encoder_path)
+        scaler = joblib.load(scaler_path)
+
         encoded_cats = encoder.transform(X[categorical_cols])
         scaled_nums = scaler.transform(X[numerical_cols])
 
@@ -27,4 +36,4 @@ def preprocess_data(df, train=False, encoder=None, scaler=None):
     X_encoded = pd.DataFrame(encoded_cats, columns=encoder.get_feature_names_out(categorical_cols))
     X_final = pd.concat([X_processed, X_encoded], axis=1)
 
-    return X_final, y, encoder, scaler
+    return X_final, y
